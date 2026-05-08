@@ -11,26 +11,34 @@ RUN apk add --no-cache \
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Tell npm to skip Puppeteer's Chromium download via .npmrc as well
+ENV npm_config_puppeteer_skip_chromium_download=true
 
 # Create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-# Copy shared types
+# Copy the entire monorepo so file: dependencies resolve correctly
+# packages/types must be present before npm install runs in any unit
 COPY packages/types ./packages/types
 
-# Copy data-integration
-COPY data-integration/package*.json ./data-integration/
-RUN cd data-integration && npm ci --only=production
+# Install data-integration dependencies
+# file:../packages/types resolves to /app/packages/types — correct
+COPY data-integration/package.json ./data-integration/package.json
+RUN cd data-integration && npm install --omit=dev --no-package-lock --legacy-peer-deps
 
-COPY data-integration ./data-integration
+# Copy data-integration source
+COPY data-integration/src ./data-integration/src
 
-# Copy backend-api
-COPY backend-api/package*.json ./backend-api/
-RUN cd backend-api && npm ci --only=production
+# Install backend-api dependencies
+# file:../data-integration resolves to /app/data-integration — correct
+COPY backend-api/package.json ./backend-api/package.json
+RUN cd backend-api && npm install --omit=dev --no-package-lock --legacy-peer-deps
 
-COPY backend-api ./backend-api
+# Copy backend-api source and db scripts
+COPY backend-api/src ./backend-api/src
+COPY backend-api/db ./backend-api/db
 
 RUN chown -R appuser:appgroup /app
 USER appuser

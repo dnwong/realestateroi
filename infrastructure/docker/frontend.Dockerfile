@@ -3,10 +3,14 @@ FROM node:20.12.2-alpine3.19 AS builder
 
 WORKDIR /app
 
+# Copy shared types first (file: dependency)
 COPY packages/types ./packages/types
-COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm ci
 
+# Install frontend dependencies
+COPY frontend/package.json ./frontend/package.json
+RUN cd frontend && npm install --no-package-lock --legacy-peer-deps
+
+# Copy frontend source and build
 COPY frontend ./frontend
 RUN cd frontend && npm run build
 
