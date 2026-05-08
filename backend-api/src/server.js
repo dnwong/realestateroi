@@ -1,6 +1,9 @@
 'use strict';
 
-require('dotenv').config();
+// Load .env file for local development only — in Docker, env vars are injected directly
+if (process.env.NODE_ENV !== 'production') {
+  try { require('dotenv').config(); } catch (_) { /* dotenv optional in production */ }
+}
 
 const app = require('./app');
 const { end: closeDb } = require('./db');
