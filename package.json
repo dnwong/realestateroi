@@ -1,0 +1,17 @@
+{
+  "name": "zillow-roi-analyzer",
+  "version": "1.0.0",
+  "description": "Monorepo root — convenience scripts only",
+  "private": true,
+  "scripts": {
+    "install:all": "cd packages/types && npm install && cd ../.. && cd data-integration && npm install && cd .. && cd backend-api && npm install && cd .. && cd frontend && npm install",
+    "test:data-integration": "cd data-integration && npm test",
+    "test:backend-api": "cd backend-api && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test:all": "npm run test:data-integration && npm run test:backend-api && npm run test:frontend",
+    "migrate": "cd backend-api && npm run migrate",
+    "docker:build": "docker compose -f infrastructure/docker-compose.yml build",
+    "docker:up": "docker compose -f infrastructure/docker-compose.yml up",
+    "docker:down": "docker compose -f infrastructure/docker-compose.yml down"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@zillow-roi/types",
+  "version": "1.0.0",
+  "description": "Shared type definitions for the Zillow ROI Analyzer",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"No tests for types package\" && exit 0"
+  },
+  "keywords": [],
+  "license": "MIT"
+}

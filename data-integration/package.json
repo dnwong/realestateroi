@@ -1,0 +1,27 @@
+{
+  "name": "@zillow-roi/data-integration",
+  "version": "1.0.0",
+  "description": "Data integration layer for the Zillow ROI Analyzer",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage"
+  },
+  "dependencies": {
+    "@zillow-roi/types": "file:../packages/types",
+    "axios": "1.6.8",
+    "cheerio": "1.0.0-rc.12",
+    "ioredis": "5.3.2",
+    "joi": "17.12.2",
+    "puppeteer": "22.4.1",
+    "puppeteer-extra": "3.3.6",
+    "puppeteer-extra-plugin-stealth": "2.11.2"
+  },
+  "devDependencies": {
+    "jest": "29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"]
+  }
+}

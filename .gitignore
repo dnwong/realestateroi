@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files — never commit secrets
+.env
+**/.env
+
+# Build output
+dist/
+**/dist/
+coverage/
+**/coverage/
+
+# Logs
+*.log
+**/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Docker
+*.pid
