@@ -58,7 +58,14 @@ REDIS_PASSWORD=devpassword
 ### 3. Start the application
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml up --build
+# Pull and start using pre-built GHCR images (recommended)
+docker compose -f infrastructure/docker-compose.yml up
+```
+
+Or build from source locally:
+
+```bash
+docker compose -f infrastructure/docker-compose.build.yml up --build
 ```
 
 This starts:

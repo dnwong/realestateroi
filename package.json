@@ -10,8 +10,9 @@
     "test:frontend": "cd frontend && npm test",
     "test:all": "npm run test:data-integration && npm run test:backend-api && npm run test:frontend",
     "migrate": "cd backend-api && npm run migrate",
-    "docker:build": "docker compose -f infrastructure/docker-compose.yml build",
+    "docker:build": "docker compose -f infrastructure/docker-compose.build.yml build",
     "docker:up": "docker compose -f infrastructure/docker-compose.yml up",
+    "docker:up:build": "docker compose -f infrastructure/docker-compose.build.yml up --build",
     "docker:down": "docker compose -f infrastructure/docker-compose.yml down"
   }
 }
