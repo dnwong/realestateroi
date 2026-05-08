@@ -113,6 +113,70 @@ zillow-roi-analyzer/
 └── .env.example             # Environment variable template
 ```
 
+## Portainer Deployment
+
+Portainer is a Docker management UI. This project includes a ready-made stack file for one-click deployment.
+
+### Prerequisites
+
+- Portainer CE or BE running on your server
+- Docker installed on the server
+- The GitHub Actions workflow has run at least once (pushes images to GHCR)
+
+### Step 1: Trigger image builds
+
+Push to `main` (or run the workflow manually in GitHub Actions > **Build and Push Docker Images** > **Run workflow**). This builds and pushes two images to GitHub Container Registry:
+
+- `ghcr.io/dnwong/realestateroi-backend:latest`
+- `ghcr.io/dnwong/realestateroi-frontend:latest`
+
+### Step 2: Make GHCR images public (or configure pull credentials)
+
+Go to **GitHub > Packages > realestateroi-backend** (and frontend) > **Package settings > Change visibility > Public**.
+
+Or, if you keep them private, add a Portainer registry credential for `ghcr.io` using a GitHub Personal Access Token with `read:packages` scope.
+
+### Step 3: Create the stack in Portainer
+
+1. Open Portainer → **Stacks** → **Add stack**
+2. Name it `zillow-roi`
+3. Select **Web editor** and paste the contents of `infrastructure/portainer-stack.yml`
+4. Scroll down to **Environment variables** and add:
+
+| Variable | Value |
+|---|---|
+| `GHCR_OWNER` | `dnwong` |
+| `POSTGRES_PASSWORD` | a strong password |
+| `REDIS_PASSWORD` | a strong password |
+| `SESSION_SECRET` | random 32+ char string |
+| `PROPERTY_PROVIDER` | `rentcast` |
+| `PROPERTY_API_KEY` | your Rentcast/property API key |
+| `RENTCAST_API_KEY` | your Rentcast API key |
+| `COL_PROVIDER` | `teleport` |
+| `COL_API_KEY` | *(leave empty for Teleport)* |
+
+5. Click **Deploy the stack**
+
+Portainer will pull the images, run the `migrate` service (creates DB tables), then start all services.
+
+### Step 4: Access the app
+
+Navigate to `http://YOUR_SERVER_IP:8080`
+
+### Updating to a new version
+
+1. Push changes to `main` — GitHub Actions rebuilds the images automatically
+2. In Portainer → **Stacks** → `zillow-roi` → **Editor** → **Update the stack**
+
+Or pull new images manually:
+```bash
+docker pull ghcr.io/dnwong/realestateroi-backend:latest
+docker pull ghcr.io/dnwong/realestateroi-frontend:latest
+```
+Then redeploy the stack in Portainer.
+
+---
+
 ## Development (without Docker)
 
 ```bash

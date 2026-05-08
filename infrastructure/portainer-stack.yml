@@ -1,0 +1,114 @@
+version: '3.9'
+
+# Portainer Stack for Zillow ROI Analyzer
+#
+# Deploy via Portainer > Stacks > Add Stack > Web editor
+# Paste this file, then set the environment variables listed below.
+#
+# Required environment variables (set in Portainer stack env section):
+#   POSTGRES_PASSWORD     - Strong password for PostgreSQL
+#   REDIS_PASSWORD        - Strong password for Redis
+#   SESSION_SECRET        - Random 32+ char string (e.g. openssl rand -hex 32)
+#   PROPERTY_PROVIDER     - rentcast | realtor | rapidapi-zillow
+#   PROPERTY_API_KEY      - API key for the chosen property provider
+#   RENTCAST_API_KEY      - Rentcast API key for rental estimates
+#   COL_PROVIDER          - teleport (free) | numbeo
+#   COL_API_KEY           - Required only for Numbeo, leave empty for Teleport
+#   GHCR_OWNER            - Your GitHub username (e.g. dnwong)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: zillow_roi
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --save 60 1
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: ghcr.io/${GHCR_OWNER}/realestateroi-backend:latest
+    restart: "no"
+    command: node db/migrate.js
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/zillow_roi
+      NODE_ENV: production
+    networks:
+      - internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend-api:
+    image: ghcr.io/${GHCR_OWNER}/realestateroi-backend:latest
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/zillow_roi
+      SESSION_SECRET: ${SESSION_SECRET}
+      REDIS_URL: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      PROPERTY_PROVIDER: ${PROPERTY_PROVIDER}
+      PROPERTY_API_KEY: ${PROPERTY_API_KEY}
+      RENTCAST_API_KEY: ${RENTCAST_API_KEY}
+      COL_PROVIDER: ${COL_PROVIDER}
+      COL_API_KEY: ${COL_API_KEY}
+    networks:
+      - internal
+      - web
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER}/realestateroi-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    networks:
+      - internal
+      - web
+    depends_on:
+      backend-api:
+        condition: service_healthy
+
+networks:
+  internal:
+    driver: bridge
+  web:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
